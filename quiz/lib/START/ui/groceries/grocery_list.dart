@@ -11,6 +11,7 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
+  int _currTapIndex = 0;
 
   void onCreate() async {
     // Navigate to the form screen using the Navigator push
@@ -27,26 +28,40 @@ class _GroceryListState extends State<GroceryList> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = const Center(child: Text('No items added yet.'));
+    // Widget content = const Center(child: Text('No items added yet.'));
 
-    if (dummyGroceryItems.isNotEmpty) {
-      //  Display groceries with an Item builder and  LIst Tile
-      content = ListView.builder(
-        itemCount: dummyGroceryItems.length,
-        itemBuilder: (context, index) =>
-            GroceryTile(grocery: dummyGroceryItems[index]),
-      );
-    }
+    // if (dummyGroceryItems.isNotEmpty) {
+    //   //  Display groceries with an Item builder and  LIst Tile
+    //   content = ListView.builder(
+    //     itemCount: dummyGroceryItems.length,
+    //     itemBuilder: (context, index) =>
+    //         GroceryTile(grocery: dummyGroceryItems[index]),
+    //   );
+    // }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Groceries'),
         actions: [IconButton(onPressed: onCreate, icon: const Icon(Icons.add))],
       ),
-      body: content,
+      body: IndexedStack(
+        index: _currTapIndex,
+        children: [GroceriesTap(), SearchTap()],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currTapIndex,
+        onTap: (index) => setState(() {
+           _currTapIndex = index;
+        }),
+        items: const[
+          BottomNavigationBarItem(icon: Icon(Icons.local_grocery_store), label: "Groceries"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search")
+          ]
+      ),
     );
   }
 }
+
 
 class GroceryTile extends StatelessWidget {
   const GroceryTile({super.key, required this.grocery});
@@ -59,6 +74,73 @@ class GroceryTile extends StatelessWidget {
       leading: Container(width: 15, height: 15, color: grocery.category.color),
       title: Text(grocery.name),
       trailing: Text(grocery.quantity.toString()),
+    );
+  }
+}
+
+class GroceriesTap extends StatelessWidget {
+  const GroceriesTap({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = const Center(child: Text('No items added yet.'));
+
+    if (dummyGroceryItems.isNotEmpty) {
+      //  Display groceries with an Item builder and  LIst Tile
+      content = ListView.builder(
+        itemCount: dummyGroceryItems.length,
+        itemBuilder: (context, index) =>
+            GroceryTile(grocery: dummyGroceryItems[index]),
+      );
+    }
+    return content;
+  }
+}
+
+class SearchTap extends StatefulWidget {
+  const SearchTap({super.key});
+
+  @override
+  State<SearchTap> createState() => _SearchTapState();
+}
+
+class _SearchTapState extends State<SearchTap> {
+  String searchText = "";
+
+  void onSearchChage(value){
+    setState(() {
+      searchText = value;
+    });
+  }
+  List<Grocery> get filteredList {
+    List<Grocery> result = [];
+    for(Grocery g in dummyGroceryItems) {
+      if (g.name.startsWith(searchText)) {
+        result.add(g);
+      }
+      
+    }
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        children: [
+          TextField(onChanged: onSearchChage,),
+          SizedBox(height: 15,),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredList.length,
+              itemBuilder: (context, index) =>
+                    GroceryTile(grocery: filteredList[index]),
+              )
+          )
+      
+        ],
+      ),
     );
   }
 }
